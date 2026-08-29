@@ -1,11 +1,20 @@
 ARG NODE_IMAGE=docker.m.daocloud.io/library/node:24.14.1-bookworm-slim
-FROM ${NODE_IMAGE} AS build
+FROM ${NODE_IMAGE} AS dependencies
 
 WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y ca-certificates python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
 RUN npm ci
+
+FROM dependencies AS build
+
 COPY . .
 RUN npm run build
+RUN npm prune --omit=dev
 
 ARG NODE_IMAGE=docker.m.daocloud.io/library/node:24.14.1-bookworm-slim
 FROM ${NODE_IMAGE}
@@ -15,8 +24,13 @@ ENV CYNOS_HOST=0.0.0.0
 ENV CYNOS_PORT=3100
 ENV CYNOS_DATA_DIR=/data
 WORKDIR /app
-COPY --from=build /app/package*.json ./
-RUN npm ci --omit=dev && mkdir -p /data && chown -R node:node /app /data
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /data \
+  && chown node:node /data
+COPY --from=build --chown=node:node /app/package.json /app/package-lock.json ./
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 USER node
 EXPOSE 3100
