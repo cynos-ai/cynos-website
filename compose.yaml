@@ -1,0 +1,19 @@
+services:
+  cynos-website:
+    build:
+      context: .
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-docker.m.daocloud.io/library/node:24.14.1-bookworm-slim}
+    environment:
+      NODE_ENV: production
+      CYNOS_HOST: 0.0.0.0
+      CYNOS_PORT: 3100
+      CYNOS_DATA_DIR: /data
+    ports:
+      - '127.0.0.1:3100:3100'
+    volumes:
+      - cynos-data:/data
+    restart: unless-stopped
+
+volumes:
+  cynos-data:
