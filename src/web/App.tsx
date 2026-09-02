@@ -55,6 +55,20 @@ export default function App() {
     }
   }
 
+  async function deleteAccount() {
+    setBusy(true);
+    setError('');
+    try {
+      await requestJson('/api/me', { method: 'DELETE' });
+      setAuth({ authenticated: false, user: null });
+      setNotice('测试账号及其会话已删除。');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '删除失败，请稍后再试');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (auth === null) {
     return (
       <Shell>
@@ -91,7 +105,12 @@ export default function App() {
 
         <section className="auth-card" aria-labelledby="auth-title">
           {auth.authenticated && auth.user ? (
-            <Welcome user={auth.user} busy={busy} onLogout={() => void logout()} />
+            <Welcome
+              user={auth.user}
+              busy={busy}
+              onLogout={() => void logout()}
+              onDelete={() => void deleteAccount()}
+            />
           ) : (
             <>
               <div className="card-heading">
@@ -175,10 +194,12 @@ function Welcome({
   user,
   busy,
   onLogout,
+  onDelete,
 }: {
   user: UserProfile;
   busy: boolean;
   onLogout: () => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="welcome-state">
@@ -191,6 +212,9 @@ function Welcome({
       <div className="welcome-line" />
       <button className="secondary-button" type="button" disabled={busy} onClick={onLogout}>
         退出登录 <span aria-hidden="true">→</span>
+      </button>
+      <button className="switch-button" type="button" disabled={busy} onClick={onDelete}>
+        删除测试账号
       </button>
     </div>
   );

@@ -65,6 +65,48 @@ describe('Cynos account authentication', () => {
     );
   });
 
+  it('deletes the authenticated test account and all of its sessions', async () => {
+    const { app, database } = await makeApp();
+    const credentials = {
+      email: 'delete-me@example.com',
+      displayName: 'Disposable Test User',
+      password: 'a-secure-test-password',
+    };
+    const register = await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: credentials,
+    });
+    assert.equal(register.statusCode, 201);
+    const cookie = readCookie(register.headers['set-cookie']);
+
+    const deleted = await app.inject({ method: 'DELETE', url: '/api/me', headers: { cookie } });
+    assert.equal(deleted.statusCode, 200);
+    assert.equal(deleted.json().deleted, true);
+    const userCount = database.sqlite.prepare('SELECT COUNT(*) AS count FROM users').get() as {
+      count: number;
+    };
+    const sessionCount = database.sqlite
+      .prepare('SELECT COUNT(*) AS count FROM auth_sessions')
+      .get() as { count: number };
+    assert.equal(userCount.count, 0);
+    assert.equal(sessionCount.count, 0);
+    assert.equal(
+      (await app.inject({ method: 'GET', url: '/api/me', headers: { cookie } })).statusCode,
+      401,
+    );
+    assert.equal(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/api/auth/login',
+          payload: { email: credentials.email, password: credentials.password },
+        })
+      ).statusCode,
+      401,
+    );
+  });
+
   it('rejects duplicates, weak credentials, and a foreign origin', async () => {
     const { app } = await makeApp();
     const payload = {

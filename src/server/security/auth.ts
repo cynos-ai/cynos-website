@@ -27,6 +27,7 @@ export interface AuthService {
   login(email: string, password: string): Promise<SessionResult | null>;
   authenticate(token: string | undefined): UserProfile | null;
   logout(token: string | undefined): void;
+  deleteAccount(token: string | undefined): boolean;
 }
 
 export interface SessionResult {
@@ -172,6 +173,22 @@ class SqliteAuthService implements AuthService {
     if (token) {
       this.database.prepare('DELETE FROM auth_sessions WHERE token_hash = ?').run(hashToken(token));
     }
+  }
+
+  deleteAccount(token: string | undefined): boolean {
+    if (!token) return false;
+    const now = new Date().toISOString();
+    const session = this.database
+      .prepare(
+        `SELECT user_id
+         FROM auth_sessions
+         WHERE token_hash = ? AND expires_at > ?`,
+      )
+      .get(hashToken(token), now) as { user_id: string } | undefined;
+    if (!session) return false;
+    return (
+      this.database.prepare('DELETE FROM users WHERE id = ?').run(session.user_id).changes === 1
+    );
   }
 
   private createSession(userId: string): string {

@@ -10,6 +10,7 @@
 6. `POST /api/auth/logout` 撤销当前 Session 并清理 Cookie。
 7. SQLite 只保存 Argon2id 密码哈希和 Session 的 SHA-256 摘要，不保存明文密码或原始令牌。
 8. 认证写请求校验 Origin；注册和登录按客户端地址限流。
+9. 已登录用户可以删除当前测试账号；用户行和全部关联 Session 原子删除，旧 Cookie 和原凭据随后均不可用。
 
 ## API
 
@@ -18,6 +19,7 @@
 - `POST /api/auth/logout`：撤销当前会话。
 - `GET /api/auth/status`：读取当前会话状态。
 - `GET /api/me`：读取受保护的当前用户资料。
+- `DELETE /api/me`：删除当前测试账号及其全部 Session，并清理 Cookie。
 - `GET /health`：读取服务和 SQLite 健康状态。
 
 ## 验收条件
@@ -26,4 +28,5 @@
 - 登录后刷新页面仍可恢复同一用户；
 - 退出后同一 Session 不能访问受保护 API；
 - 重复邮箱、弱密码、无效邮箱和错误密码有明确失败响应；
+- 测试账号删除后，旧 Cookie、原邮箱密码登录及数据库用户/Session 行均不可用；
 - 测试、构建和端到端 smoke 全部通过。

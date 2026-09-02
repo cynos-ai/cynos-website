@@ -118,6 +118,14 @@ export async function createApp(options: AppOptions) {
     return reply.send({ user });
   });
 
+  app.delete('/api/me', async (request, reply) => {
+    if (!auth.deleteAccount(request.cookies[SESSION_COOKIE_NAME])) {
+      throw new AppError('UNAUTHORIZED', '请先登录', 401);
+    }
+    clearSessionCookie(request, reply);
+    return reply.send({ deleted: true, authenticated: false, user: null });
+  });
+
   app.setNotFoundHandler(async (request, reply) => {
     if (
       request.method === 'GET' &&
