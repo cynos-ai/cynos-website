@@ -19,6 +19,7 @@ import {
   type AuthService,
 } from './security/auth.js';
 import { RateLimiter } from './security/rate-limit.js';
+import { registerTestDataCleanup } from './test-data-cleanup.js';
 
 export interface AppOptions {
   config: AppConfig;
@@ -57,6 +58,10 @@ export async function createApp(options: AppOptions) {
       throw new AppError('ORIGIN_FORBIDDEN', '请求来源未被允许', 403);
     }
   });
+
+  if (options.config.testDataCleanupToken) {
+    registerTestDataCleanup(app, options.database, options.config.testDataCleanupToken);
+  }
 
   app.get('/health', async (request, reply) => {
     const health = makeHealth(options.config, options.database);

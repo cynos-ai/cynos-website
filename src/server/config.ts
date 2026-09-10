@@ -11,6 +11,7 @@ export interface AppConfig {
   webRoot: string;
   version: string;
   allowedOrigin?: string;
+  testDataCleanupToken?: string;
 }
 
 export class ConfigError extends Error {
@@ -33,7 +34,12 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env): AppCon
     throw new ConfigError('CYNOS_PORT must be an integer between 0 and 65535');
   }
 
+  const testDataCleanupToken = environment.CYNOS_TEST_DATA_CLEANUP_TOKEN || undefined;
+  if (testDataCleanupToken && testDataCleanupToken.length < 32) {
+    throw new ConfigError('CYNOS_TEST_DATA_CLEANUP_TOKEN must contain at least 32 characters');
+  }
   return {
+    testDataCleanupToken,
     environment: environmentName as AppConfig['environment'],
     host: environment.CYNOS_HOST ?? '127.0.0.1',
     port,

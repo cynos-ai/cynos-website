@@ -9,6 +9,7 @@ services:
       CYNOS_HOST: 0.0.0.0
       CYNOS_PORT: 3100
       CYNOS_DATA_DIR: /data
+      CYNOS_TEST_DATA_CLEANUP_TOKEN: ${CYNOS_TEST_DATA_CLEANUP_TOKEN:-}
     ports:
       - '127.0.0.1:3100:3100'
     volumes:

@@ -27,3 +27,5 @@ Cynos Website 是一个面向用户账户体验的最小真实产品，用于验
 - 密码最低 12 个字符，登录和注册接口按客户端地址限流；
 - 这是 LuoWang 的非生产验收目标，部署时仍应使用 HTTPS 和隔离的数据目录；
 - 该项目用于演示用户账户闭环，不代表 Cynos 的完整产品身份或权限模型。
+- 罗网创建临时账户时，将 `luowang-<完整Run ID>-` 前缀真实用于 email 或 displayName（数据库 display_name）字段；只有登记 ID 而没有给目标数据加标记，不在自动清理范围。
+- 部署提供专用清理 Token 后，Harness 可用按 Run 的鉴权查删接口回收标记账户及会话；默认关闭，不需要把清理 Token 提供给测试 Agent。契约见 `changes/run-scoped-test-cleanup/spec.md`。
